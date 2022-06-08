@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "npx nodemon server/index.js -w"
+    "start": "npx nodemon index.js -w"
   },
   "repository": {
     "type": "git",
