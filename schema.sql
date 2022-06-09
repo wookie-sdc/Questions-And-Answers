@@ -35,6 +35,7 @@ CREATE TABLE photos (
   url VARCHAR(200) NOT NULL
 );
 
+-- Extract .csv data and load into database
 COPY questions(id, product_id, body, date_written, asker_name, asker_email, reported, helpful) FROM '/Users/kyletran/Desktop/HR/data/questions.csv'
 DELIMITER ','
 CSV HEADER;
@@ -47,7 +48,26 @@ COPY photos(id, answer_id, url) FROM '/Users/kyletran/Desktop/HR/data/answers_ph
 DELIMITER ','
 CSV HEADER;
 
+-- Transform data into expected format:
+
+-- Create temp TIMESTAMP column
+ALTER TABLE questions ADD formatted_date TIMESTAMP WITHOUT TIME ZONE NULL;
+
+-- Copy casted value over temporary column
+UPDATE questions SET formatted_date = to_timestamp(date_written/1000)::TIMESTAMP;
+
+-- Modify original column with temp column
+ALTER TABLE questions ALTER COLUMN date_written TYPE TIMESTAMP WITHOUT TIME ZONE USING formatted_date;
+
+-- Drop temporary column
+ALTER TABLE questions DROP COLUMN formatted_date;
+
+
+ALTER TABLE answers ADD formatted_date TIMESTAMP WITHOUT TIME ZONE NULL;
+UPDATE answers SET formatted_date = to_timestamp(date_written/1000)::TIMESTAMP;
+ALTER TABLE answers ALTER COLUMN date_written TYPE TIMESTAMP WITHOUT TIME ZONE USING formatted_date;
+ALTER TABLE answers DROP COLUMN formatted_date;
+
 create index product_id ON questions(product_id);
 create index question_id ON answers(question_id);
 create index answer_id ON photos(answer_id);
--- create index on foreign key columms
