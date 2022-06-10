@@ -37,11 +37,25 @@ module.exports = {
             answers.id, (
               json_build_object(
                 'id', answers.id,
-
+                'body', answers.body,
+                'date', answers.date_written,
+                'answerer_name', answers.answerer_name,
+                'helpfulness', answers.helpful,
+                'photos', (
+                  SELECT COALESCE (
+                    json_agg(
+                      json_build_object(
+                        'id', id,
+                        'url', url
+                      )
+                    )
+                    ,'[]'::json)
+                    FROM photos WHERE photos.answer_id = answers.id
+                )
               )
             )
-          ),
-          '{}'::json)
+          )
+          ,'{}'::json)
           FROM answers WHERE answers.question_id = questions.id
       )
     )) AS results
