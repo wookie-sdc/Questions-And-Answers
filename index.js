@@ -25,6 +25,24 @@ app.get('/qa/questions', (req, res) => {
 // get all answers
 app.get('/qa/questions/:question_id/answers', (req, res) => {
 
+  // let vals = [parseInt(req.params.question_id), 1, 5];
+  // if (Object.keys(req.body).length > 0 ) {
+  //   vals[1] = parseInt(req.body.page);
+  //   vals[2] = parseInt(req.body.count);
+  // }
+  let vals = [parseInt(req.params.question_id)];
+  // how to add pages and count ???
+  models.getAnswers(vals)
+  .then((data) => {
+    data.rows[0].page = parseInt(req.body.page);
+    data.rows[0].count = parseInt(req.body.count);
+    res.send(data.rows[0]).status(200);
+  })
+  .catch((err) => {
+    console.log(err);
+    res.sendStatus(404);
+  })
+
 });
 
 // post new question
