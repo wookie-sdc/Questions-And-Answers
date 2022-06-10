@@ -1,12 +1,68 @@
-const db = require('./index.js');
+const pool = require('./index.js');
+const Promise = require("bluebird");
+const db = Promise.promisifyAll(pool, { multiArgs: true });
 
 module.exports = {
 
-  // select all questions with product id from query
-  // join with all answers with question_id WHERE question_id = product_id
-  // AND join with all photos with answer_id WHERE answer_id = (answer_id WHERE question_id = id FROM question)
-  getQuestions: () => {
-    npx kill-port 3000
+  getQuestions: (val) => {
+    // only want answers and questions that are NOT reported
+    // var query = `SELECT product_id,
+    // jsonb_agg(json_build_object(
+    //   'question_id',questions.id,
+    //   'question_body',questions.body,
+    //   'question_date',questions.date_written,
+    //   'asker_name', questions.asker_name,
+    //   'question_helpfullness', questions.helpful,
+    //   'reported', questions.reported,
+    //   'answers', json_build_object(
+    //     (SELECT answers.id FROM answers WHERE answers.question_id = (SELECT questions.id FROM questions WHERE questions.product_id = $1)) ,'test')
+    // )) AS results
+    // FROM questions WHERE product_id = $1 AND reported = false
+    // GROUP BY product_id`
+
+    // if there are answers, create an object for them with answer_id : {}
+    // if not, default = {}
+
+    var query = `SELECT product_id,
+    jsonb_agg(json_build_object(
+      'question_id',questions.id,
+      'question_body',questions.body,
+      'question_date',questions.date_written,
+      'asker_name', questions.asker_name,
+      'question_helpfullness', questions.helpful,
+      'reported', questions.reported,
+      'answers', (
+        SELECT COALESCE(
+          json_object_agg(
+            answers.id, (
+              json_build_object(
+                'id', answers.id,
+                'body', answers.body,
+                'date', answers.date_written,
+                'answerer_name', answers.answerer_name,
+                'helpfulness', answers.helpful,
+                'photos', (
+                  SELECT COALESCE (
+                    json_agg(
+                      json_build_object(
+                        'id', id,
+                        'url', url
+                      )
+                    )
+                    ,'[]'::json)
+                    FROM photos WHERE photos.answer_id = answers.id
+                )
+              )
+            )
+          )
+          ,'{}'::json)
+          FROM answers WHERE answers.question_id = questions.id
+      )
+    )) AS results
+    FROM questions WHERE product_id = $1 AND reported = false
+    GROUP BY product_id`
+
+    return pool.query(query, val);
   },
 
   // SELECT * FROM ANSWERS WHERE question_id = id AND reported = false
