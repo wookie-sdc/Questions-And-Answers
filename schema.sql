@@ -15,7 +15,6 @@ CREATE TABLE questions (
   asker_email VARCHAR(40) NOT NULL,
   reported BOOLEAN NOT NULL DEFAULT false,
   helpful INT NOT NULL DEFAULT 0
-
 );
 
 CREATE TABLE answers (
@@ -35,6 +34,7 @@ CREATE TABLE photos (
   url VARCHAR(200) NOT NULL
 );
 
+
 -- Extract .csv data and load into database
 COPY questions(id, product_id, body, date_written, asker_name, asker_email, reported, helpful) FROM '/Users/kyletran/Desktop/HR/data/questions.csv'
 DELIMITER ','
@@ -47,6 +47,10 @@ CSV HEADER;
 COPY photos(id, answer_id, url) FROM '/Users/kyletran/Desktop/HR/data/answers_photos.csv'
 DELIMITER ','
 CSV HEADER;
+
+create index product_id ON questions(product_id);
+create index question_id ON answers(question_id);
+create index answer_id ON photos(answer_id);
 
 -- Transform data into expected format:
 
@@ -68,6 +72,7 @@ UPDATE answers SET formatted_date = to_timestamp(date_written/1000)::TIMESTAMP;
 ALTER TABLE answers ALTER COLUMN date_written TYPE TIMESTAMP WITHOUT TIME ZONE USING formatted_date;
 ALTER TABLE answers DROP COLUMN formatted_date;
 
-create index product_id ON questions(product_id);
-create index question_id ON answers(question_id);
-create index answer_id ON photos(answer_id);
+-- when primary key becomes out of sync
+SELECT setval('questions_id_seq', (SELECT MAX(id) FROM questions)+1);
+SELECT setval('answers_id_seq', (SELECT MAX(id) FROM answers)+1);
+SELECT setval('photos_id_seq', (SELECT MAX(id) FROM photos)+1);

@@ -8,6 +8,10 @@ const PORT = 3001;
 app.use(express.urlencoded({extended:true}));
 app.use(express.json());
 
+// last questions id: 3518963
+// last answers id: 6879306
+// last photos id: 2063759
+
 // ROUTES:
 
 // get all questions
@@ -25,13 +29,15 @@ app.get('/qa/questions', (req, res) => {
 // get all answers
 app.get('/qa/questions/:question_id/answers', (req, res) => {
 
-  // let vals = [parseInt(req.params.question_id), 1, 5];
-  // if (Object.keys(req.body).length > 0 ) {
-  //   vals[1] = parseInt(req.body.page);
-  //   vals[2] = parseInt(req.body.count);
-  // }
-  let vals = [parseInt(req.params.question_id)];
-  // how to add pages and count ???
+  // fix pages and count...
+  let vals = [parseInt(req.params.question_id), 5];
+  if (Object.keys(req.body).length > 0 ) {
+
+    vals[1] = parseInt(req.body.count);
+    // vals[2] = (parseInt(req.body.page) - 1) * vals[1] ;
+  }
+  // let vals = [parseInt(req.params.question_id)];
+
   models.getAnswers(vals)
   .then((data) => {
     data.rows[0].page = parseInt(req.body.page);
@@ -47,12 +53,16 @@ app.get('/qa/questions/:question_id/answers', (req, res) => {
 
 // post new question
 app.post('/qa/questions', (req, res) => {
-
+  let vals = [req.body.body, req.body.name, req.body.email, req.body.product_id];
+  models.postQuestion(vals)
+  .then(() => res.sendStatus(201))
+  .catch((err) => {console.log(err); res.sendStatus(404)})
 });
 
 // post new answer
 app.post('/qa/questions/:question_id/answers', (req, res) => {
 
+  let ansVals = [req.params.question_id, req.body.body, req.body.name, req.body.email]
 });
 
 // update helpful on question

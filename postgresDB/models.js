@@ -8,7 +8,7 @@ module.exports = {
 
     var query =
     `SELECT product_id,
-    jsonb_agg(json_build_object(
+     jsonb_agg(json_build_object(
       'question_id',questions.id,
       'question_body',questions.body,
       'question_date',questions.date_written,
@@ -28,10 +28,7 @@ module.exports = {
                 'photos', (
                   SELECT COALESCE (
                     json_agg(
-                      json_build_object(
-                        'id', id,
-                        'url', url
-                      )
+                      url
                     )
                     ,'[]'::json)
                     FROM photos WHERE photos.answer_id = answers.id
@@ -49,13 +46,12 @@ module.exports = {
     return pool.query(query, prodId);
   },
 
-  // SELECT * FROM ANSWERS WHERE question_id = id AND reported = false
-  // JOIN with photos where answer_id = (answer_id WHERE question_id = id)
+
   getAnswers: (vals) => {
 
-    var query = `
-    SELECT answers.question_id AS question,
-    COALESCE(
+    var query =
+    `SELECT answers.question_id AS question,
+     COALESCE(
       json_agg(
         json_build_object(
           'answer_id', answers.id,
@@ -72,34 +68,36 @@ module.exports = {
               )
             ,'[]'::json)
             FROM photos WHERE photos.answer_id = answers.id
+            LIMIT $2
           )
         )
         ORDER BY answers.id DESC
       )
-    , '[]'::json) AS results
-    FROM answers WHERE answers.question_id= $1 AND answers.reported = false
-    GROUP BY answers.question_id
+     , '[]'::json) AS results
+     FROM answers WHERE answers.question_id= $1 AND answers.reported = false
+     GROUP BY answers.question_id
+     LIMIT $2
     `
-
     return pool.query(query, vals);
 
   },
 
 
-  // INSERT <questionParams> INTO questions
-  postQuestion: () => {
 
+  postQuestion: (vals) => {
+
+    let query =
+    `INSERT INTO questions
+     (body, asker_name, asker_email, product_id, date_written)
+     VALUES ($1,$2,$3,$4,current_timestamp)`;
+
+    return pool.query(query, vals);
   },
 
-  // INSERT <answer> INTO answers WHERE question_id = (? question_id param)
-  // INSERT <photo> INTO photos WHERE answer_id = (SELECT question_id FROM answeres WHERE question_id = questionIdParam)
-  postAnswer: () => {
-
+  postAnswer: (vals) => {
+    let query =
   },
 
-  // might need to retrieve helpful/reported states first...
-
-  // UPDATE questions SET helpful = (!helpful) WHERE question_id = (questionIdParam)
   markQHelpful: () => {
 
   },
