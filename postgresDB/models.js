@@ -5,8 +5,7 @@ const db = Promise.promisifyAll(pool, { multiArgs: true });
 module.exports = {
 
   getQuestions: (prodId) => {
-
-    var query =
+    const query =
     `SELECT product_id,
      jsonb_agg(json_build_object(
       'question_id',questions.id,
@@ -41,15 +40,14 @@ module.exports = {
       )
     )) AS results
     FROM questions WHERE product_id = $1 AND reported = false
-    GROUP BY product_id`
+    GROUP BY product_id`;
 
     return pool.query(query, prodId);
   },
 
 
   getAnswers: (vals) => {
-
-    var query =
+    const query =
     `SELECT answers.question_id AS question,
      COALESCE(
       json_agg(
@@ -76,17 +74,13 @@ module.exports = {
      , '[]'::json) AS results
      FROM answers WHERE answers.question_id= $1 AND answers.reported = false
      GROUP BY answers.question_id
-     LIMIT $2
-    `
+     LIMIT $2`;
     return pool.query(query, vals);
 
   },
 
-
-
   postQuestion: (vals) => {
-
-    let query =
+    const query =
     `INSERT INTO questions
      (body, asker_name, asker_email, product_id, date_written)
      VALUES ($1,$2,$3,$4,current_timestamp)`;
@@ -95,24 +89,53 @@ module.exports = {
   },
 
   postAnswer: (vals) => {
-    let query =
+    const query =
+    `WITH answer_insert AS (
+      INSERT INTO answers (question_id, body, answerer_name, answerer_email)
+      VALUES ($1, $2, $3, $4)
+      RETURNING id
+    )
+     INSERT INTO photos (url, answer_id)
+     VALUES (regexp_split_to_table($5, E'\\,+'), (SELECT id FROM answer_insert))`;
+
+     return pool.query(query, vals)
   },
 
-  markQHelpful: () => {
+  markQHelpful: (vals) => {
+    const query =
+    `UPDATE questions
+     SET helpful = helpful+1
+     WHERE id = $1`;
 
+     return pool.query(query, vals)
   },
 
-  // UPDATE questions SET reported = (!reported) WHERE question_id = (questionIdParam)
-  reportQuestion: () => {
+  markAHelpful: (vals) => {
+    const query =
+    `UPDATE answers
+     SET helpful = helpful+1
+     WHERE id = $1`;
 
+     return pool.query(query, vals)
   },
 
-  markAHelpful: () => {
-
+  reportQuestion: (vals) => {
+    const query =
+    `UPDATE questions
+     SET reported = true
+     WHERE id = $1
+    `;
+    return pool.query(query, vals)
   },
 
-  reportAnswer: () => {
 
+  reportAnswer: (vals) => {
+    const query =
+    `UPDATE answers
+     SET reported = true
+     WHERE id = $1
+    `;
+    return pool.query(query, vals)
   }
 
 
