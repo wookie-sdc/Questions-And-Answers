@@ -66,15 +66,13 @@ module.exports = {
               )
             ,'[]'::json)
             FROM photos WHERE photos.answer_id = answers.id
-            LIMIT $2
           )
         )
         ORDER BY answers.id DESC
       )
      , '[]'::json) AS results
      FROM answers WHERE answers.question_id= $1 AND answers.reported = false
-     GROUP BY answers.question_id
-     LIMIT $2`;
+     GROUP BY answers.question_id`;
     return pool.query(query, vals);
 
   },

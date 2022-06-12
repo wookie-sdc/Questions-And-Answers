@@ -3,7 +3,7 @@ const pool = require('./postgresDB/index.js');
 const models = require('./postgresDB/models.js');
 
 const app = express();
-const PORT = 3001;
+const PORT = 3000;
 
 app.use(express.urlencoded({extended:true}));
 app.use(express.json());
@@ -12,11 +12,14 @@ app.use(express.json());
 // last answers id: 6879306
 // last photos id: 2063759
 
+// TODO: Reformat to page and count params.....
+
 // ROUTES:
 
 // get all questions
 app.get('/qa/questions', (req, res) => {
-  models.getQuestions([req.body.product_id])
+  var a = req.body.product_id || '1000010';
+  models.getQuestions([a])
   .then((data) => {
     res.send(data.rows[0]).status(200)
   })
@@ -30,16 +33,17 @@ app.get('/qa/questions', (req, res) => {
 app.get('/qa/questions/:question_id/answers', (req, res) => {
 
   // fix pages and count...
-  let vals = [parseInt(req.params.question_id), 5];
-  if (Object.keys(req.body).length > 0 ) {
+  // let vals = [parseInt(req.params.question_id), 5];
+  let vals = [parseInt(req.params.question_id)];
+  // if (Object.keys(req.body).length > 0 ) {
 
-    vals[1] = parseInt(req.body.count);
-    // vals[2] = (parseInt(req.body.page) - 1) * vals[1] ;
-  }
+  //   vals[1] = parseInt(req.body.count);
+  //   // vals[2] = (parseInt(req.body.page) - 1) * vals[1] ;
+  // }
   models.getAnswers(vals)
   .then((data) => {
-    data.rows[0].page = parseInt(req.body.page);
-    data.rows[0].count = parseInt(req.body.count);
+    data.rows[0].page = 1;
+    data.rows[0].count = vals[1];
     res.send(data.rows[0]).status(200);
   })
   .catch((err) => {
