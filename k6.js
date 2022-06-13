@@ -3,7 +3,7 @@ import { check, group, sleep } from 'k6';
 
 const options = {
   vus: 1000,
-  duration: '600s',
+  duration: '30s',
 };
 const SLEEP_DURATION = 0.1;
 
