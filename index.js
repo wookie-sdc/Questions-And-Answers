@@ -18,7 +18,7 @@ app.use(express.json());
 
 // get all questions
 app.get('/qa/questions', (req, res) => {
-  var a = req.body.product_id || '1000010';
+  var a = req.body.product_id || req.query.product_id || '1000010';
   models.getQuestions([a])
   .then((data) => {
     res.send(data.rows[0]).status(200)
