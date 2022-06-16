@@ -6,8 +6,7 @@ module.exports = {
 
   getQuestions: (prodId) => {
     const query =
-    `SELECT product_id,
-     jsonb_agg(json_build_object(
+    `SELECT json_build_object(
       'question_id',questions.id,
       'question_body',questions.body,
       'question_date',questions.date_written,
@@ -38,9 +37,10 @@ module.exports = {
           ,'{}'::json)
           FROM answers WHERE answers.question_id = questions.id
       )
-    )) AS results
+    ) AS results
     FROM questions WHERE product_id = $1 AND reported = false
-    GROUP BY product_id`;
+    `;
+
 
     return pool.query(query, prodId);
   },
